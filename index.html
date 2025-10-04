@@ -5,25 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kilometer Tracker</title>
 <style>
-body { font-family: sans-serif; max-width: 900px; margin: 1rem auto; padding: 0 1rem; }
+body {
+  font-family: sans-serif;
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+  font-size: 16px;
+}
+
 h1, h2 { text-align: center; }
 
 form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 90%;
+  width: 95%;
   max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 2rem;
+  margin: 0 auto 2rem auto;
 }
 
 input, button {
-  padding: 0.75rem;
-  font-size: 1rem;
+  padding: 1rem;
+  font-size: 1.1rem;
   width: 100%;
   box-sizing: border-box;
+  border-radius: 5px;
 }
 
 .table-wrapper {
@@ -35,19 +41,31 @@ table {
   border-collapse: collapse;
   width: 100%;
   max-width: 100%;
+  font-size: 1rem;
 }
 
 th, td {
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 12px;
   text-align: left;
 }
 
 th {
   background-color: #f0f0f0;
+  font-weight: bold;
 }
 
-#status { text-align: center; color: green; font-size: 0.9rem; margin-bottom: 1rem; }
+#status {
+  text-align: center;
+  color: green;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 480px) {
+  table { font-size: 1.1rem; }
+  input, button { font-size: 1.2rem; padding: 1.2rem; }
+}
 </style>
 </head>
 <body>
@@ -125,7 +143,7 @@ form.addEventListener("submit", async e => {
       localStorage.setItem("letzterName", data.name);
       document.getElementById("km").value = "";
       statusDiv.textContent = "✅ Eintrag gespeichert. Tabelle wird aktualisiert...";
-      loadStats(); // Statistik neu laden
+      loadStats();
       setTimeout(() => statusDiv.textContent = "", 3000);
     } else {
       statusDiv.textContent = "⚠️ Fehler beim Speichern!";
@@ -142,7 +160,7 @@ form.addEventListener("submit", async e => {
 async function loadStats() {
   try {
     const res = await fetch(scriptURL);
-    const rawData = await res.json(); // Array von Arrays
+    const rawData = await res.json();
     const rows = rawData.slice(1);
     const data = rows.map(r => ({Datum: r[0], Name: r[1], Kilometer: parseFloat(r[2])}));
 
@@ -151,28 +169,25 @@ async function loadStats() {
     const last365 = new Date(); last365.setDate(today.getDate() - 365);
     const last30 = new Date(); last30.setDate(today.getDate() - 30);
 
-    // Gesamt seit Okt 2023
     document.getElementById("totalSinceOct").textContent = data.filter(d => new Date(d.Datum) >= oct2023).reduce((s,e)=>s+e.Kilometer,0);
-    // Gesamt letzte 365 Tage
     document.getElementById("totalLastYear").textContent = data.filter(d => new Date(d.Datum) >= last365 && new Date(d.Datum) <= today).reduce((s,e)=>s+e.Kilometer,0);
 
-    // Kilometer je Name letzte 365 Tage
     const summary365 = {};
     data.forEach(d => { const dt = new Date(d.Datum); if(dt>=last365 && dt<=today){ summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer; }});
     const summary365Array = Object.entries(summary365).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
-    const tbody365 = document.querySelector("#summary365Table tbody"); tbody365.innerHTML=""; summary365Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody365.appendChild(r);});
+    const tbody365 = document.querySelector("#summary365Table tbody"); tbody365.innerHTML="";
+    summary365Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody365.appendChild(r);});
 
-    // Letzte 30 Tage
     const summary30 = {};
     data.forEach(d => { const dt = new Date(d.Datum); if(dt>=last30 && dt<=today){ summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer; }});
     const summary30Array = Object.entries(summary30).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
-    const tbody30 = document.querySelector("#summaryTable tbody"); tbody30.innerHTML=""; summary30Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody30.appendChild(r);});
+    const tbody30 = document.querySelector("#summaryTable tbody"); tbody30.innerHTML="";
+    summary30Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody30.appendChild(r);});
 
-    // Detail-Tabelle zusammenfassen (+1 Tag Fix)
     const detailMap = {};
     data.forEach(d=>{
       let dt = new Date(d.Datum);
-      dt.setDate(dt.getDate() + 1); // +1 Tag
+      dt.setDate(dt.getDate() + 1);
       const dateKey = dt.toISOString().split("T")[0];
       const key = `${dateKey}_${d.Name}`;
       if(!detailMap[key]) detailMap[key]={Datum:dateKey, Name:d.Name, Kilometer:0};
@@ -186,6 +201,7 @@ async function loadStats() {
     console.error("Fehler beim Laden der Daten",err);
   }
 }
+
 
 loadStats();
 </script>
