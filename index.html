@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kilometer Tracker</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 2rem auto; }
+    h1, h2 { text-align: center; }
+    form { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; }
+    input, button { padding: 0.5rem; font-size: 1rem; }
+    table { border-collapse: collapse; margin: 20px auto; width: 90%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    #status { text-align: center; color: green; font-size: 0.9rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+  <h1>Kilometer Tracker</h1>
+
+  <!-- Formular -->
+  <form id="dataForm">
+    <input type="date" id="date" required>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="number" id="km" placeholder="Kilometer" required>
+    <button type="submit">Eintragen</button>
+  </form>
+
+  <div id="status"></div>
+
+  <!-- Statistik-Bereiche -->
+  <div id="totals">
+    <p><strong>Gesamt-Kilometer seit Oktober 2023:</strong> <span id="totalSinceOct"></span></p>
+    <p><strong>Gesamt-Kilometer in den letzten 365 Tagen:</strong> <span id="totalLastYear"></span></p>
+  </div>
+
+  <h2>Kilometer je Name in den letzten 365 Tagen</h2>
+  <table id="summary365Table">
+    <thead>
+      <tr><th>Name</th><th>Gesamt-Kilometer</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Gesamt-Kilometer pro Name (letzte 30 Tage)</h2>
+  <table id="summaryTable">
+    <thead>
+      <tr><th>Name</th><th>Gesamt-Kilometer</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Alle Einträge nach Datum (zusammengefasst)</h2>
+  <table id="detailsTable">
+    <thead>
+      <tr><th>Datum</th><th>Name</th><th>Kilometer</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwKk6g-ZgH4j7CuNlY25MysSHIu-dQT47WPb2t1a2LKPnpQvaHm9L9XTTxd9va1yWWF7w/exec";
+    const dataURL = scriptURL;
+    const form = document.getElementById("dataForm");
+    const statusDiv = document.getElementById("status");
+    const nameInput = document.getElementById("name");
+    const dateInput = document.getElementById("date");
+
+    // Heutiges Datum automatisch setzen
+    const heute = new Date();
+    const yyyy = heute.getFullYear();
+    const mm = String(heute.getMonth() + 1).padStart(2, '0');
+    const dd = String(heute.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+    // Letzten Namen aus localStorage laden
+    const gespeicherterName = localStorage.getItem("letzterName");
+    if (gespeicherterName) nameInput.value = gespeicherterName;
+
+    // Formular-Submit: POST
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const data = {
+        date: dateInput.value,
+        name: nameInput.value,
+        km: document.getElementById("km").value
+      };
+      try {
+        const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(data) });
+        const result = await res.json();
+        if (result.result === "success") {
+          localStorage.setItem("letzterName", data.name);
+          document.getElementById("km").value = "";
+          statusDiv.textContent = "✅ Eintrag gespeichert. Tabelle wird aktualisiert...";
+          loadStats(); // Statistik neu laden
+          setTimeout(() => statusDiv.textContent = "", 3000);
+        } else {
+          statusDiv.textContent = "⚠️ Fehler beim Speichern!";
+          setTimeout(() => statusDiv.textContent = "", 4000);
+        }
+      } catch (err) {
+        console.error(err);
+        statusDiv.textContent = "⚠️ Netzwerkfehler beim Speichern!";
+        setTimeout(() => statusDiv.textContent = "", 4000);
+      }
+    });
+
+    // Statistik laden und Tabellen füllen
+    async function loadStats() {
+      try {
+        const res = await fetch(dataURL);
+        const rawData = await res.json(); // Array von Arrays
+        const rows = rawData.slice(1);
+        const data = rows.map(r => ({Datum: r[0], Name: r[1], Kilometer: parseFloat(r[2])}));
+
+        const today = new Date();
+        const oct2023 = new Date("2023-10-01");
+        const last365 = new Date();
+        last365.setDate(today.getDate() - 365);
+        const last30 = new Date();
+        last30.setDate(today.getDate() - 30);
+
+        // Gesamt seit Okt 2023
+        document.getElementById("totalSinceOct").textContent = data.filter(d => {
+          const dt = new Date(d.Datum); dt.setDate(dt.getDate() + 1); // Korrektur
+          return dt >= oct2023;
+        }).reduce((s,e)=>s+e.Kilometer,0);
+
+        // Gesamt letzte 365 Tage
+        document.getElementById("totalLastYear").textContent = data.filter(d => {
+          const dt = new Date(d.Datum); dt.setDate(dt.getDate() + 1); // Korrektur
+          return dt >= last365 && dt <= today;
+        }).reduce((s,e)=>s+e.Kilometer,0);
+
+        // Kilometer je Name letzte 365 Tage
+        const summary365 = {};
+        data.forEach(d => {
+          const dt = new Date(d.Datum); dt.setDate(dt.getDate() + 1); // Korrektur
+          if(dt >= last365 && dt <= today){ summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer; }
+        });
+        const summary365Array = Object.entries(summary365).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
+        const tbody365 = document.querySelector("#summary365Table tbody"); tbody365.innerHTML="";
+        summary365Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody365.appendChild(r);});
+
+        // Letzte 30 Tage
+        const summary30 = {};
+        data.forEach(d => {
+          const dt = new Date(d.Datum); dt.setDate(dt.getDate() + 1); // Korrektur
+          if(dt >= last30 && dt <= today){ summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer; }
+        });
+        const summary30Array = Object.entries(summary30).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
+        const tbody30 = document.querySelector("#summaryTable tbody"); tbody30.innerHTML="";
+        summary30Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody30.appendChild(r);});
+
+        // Detail-Tabelle zusammenfassen
+        const detailMap = {};
+        data.forEach(d=>{
+          const dt = new Date(d.Datum); dt.setDate(dt.getDate() + 1); // Korrektur
+          const dateKey = dt.toISOString().split("T")[0];
+          const key = `${dateKey}_${d.Name}`;
+          if(!detailMap[key]) detailMap[key]={Datum: dateKey, Name: d.Name, Kilometer:0};
+          detailMap[key].Kilometer += d.Kilometer;
+        });
+        const detailArray = Object.values(detailMap).sort((a,b)=>new Date(b.Datum)-new Date(a.Datum));
+        const tbodyDetails = document.querySelector("#detailsTable tbody"); tbodyDetails.innerHTML="";
+        detailArray.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Datum}</td><td>${e.Name}</td><td>${e.Kilometer}</td>`; tbodyDetails.appendChild(r);});
+
+      } catch(err) {
+        console.error("Fehler beim Laden der Daten",err);
+      }
+    }
+
+    loadStats();
+  </script>
+
+</body>
+</html>
