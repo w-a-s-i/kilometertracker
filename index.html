@@ -1,187 +1,213 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Kilometer Tracker</title>
-  <style>
-    body { 
-      font-family: sans-serif; 
-      max-width: 900px; 
-      margin: 2rem auto; 
-    }
-    form { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 0.5rem; 
-      justify-content: center; 
-      margin-bottom: 2rem; 
-    }
-    input, button { 
-      padding: 0.5rem; 
-      font-size: 1rem; 
-    }
-    table { 
-      border-collapse: collapse; 
-      margin: 20px auto; 
-      width: 90%; 
-    }
-    th, td { 
-      border: 1px solid #ccc; 
-      padding: 8px; 
-      text-align: left; 
-    }
-    th { 
-      background-color: #f0f0f0; 
-    }
-    #status { 
-      text-align: center; 
-      color: green; 
-      font-size: 0.9rem; 
-      margin-bottom: 1rem; 
-    }
-    h2.section-title {
-      text-align: left;
-      font-size: 1rem;
-      font-weight: bold;
-      margin-top: 2rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kilometer Tracker</title>
+<meta name="theme-color" content="#4CAF50">
+<style>
+body { font-family:sans-serif; margin:1rem; max-width:100%; }
+.totals-text { font-size:1.3rem; font-weight:bold; text-align:center; margin-bottom:0.6rem; }
+form { display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto 1.5rem auto; }
+input, button { padding:1rem; font-size:1.1rem; width:100%; box-sizing:border-box; }
+#status { text-align:center; color:green; font-size:1.1rem; margin-bottom:1rem; }
+table { width:100%; border-collapse:collapse; margin-bottom:1.5rem; }
+table th, table td { border:1px solid #ccc; padding:12px 8px; text-align:center; line-height:1.4; }
+table th { background-color:#f0f0f0; font-size:1.2rem; font-weight:bold; }
+table td { font-size:1.1rem; }
+.multi-select-container {
+  border: 1px solid #ccc;
+  padding: 8px;
+  width: 100%;
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  position: relative;
+}
+.multi-select-options {
+  display: none;
+  border-top: 1px solid #eee;
+  padding: 8px;
+  background: #fff;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.multi-select-container.active .multi-select-options { display: grid; }
+.filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #f3f3f3;
+  padding: 10px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.filter-btn.active {
+  background: #4caf50;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .multi-select-options { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
 
-  <!-- Formular -->
-  <form id="dataForm">
-    <input type="date" id="date" required>
-    <input type="text" id="name" placeholder="Name" required>
-    <input type="number" id="km" placeholder="Kilometer" required>
-    <button type="submit">Eintragen</button>
-  </form>
+<div id="totals">
+  <p class="totals-text"><strong><span id="todayKm">0</span> KM heute</strong></p>
+  <p class="totals-text"><strong><span id="yesterdayKm">0</span> KM gestern</strong></p>
+  <p class="totals-text"><strong><span id="total7"></span> KM in 7 Tagen</strong></p>
+  <p class="totals-text"><strong><span id="totalLast30"></span> KM in 30 Tagen</strong></p>
+  <p class="totals-text"><strong><span id="totalLastYear"></span> KM in 365 Tagen</strong></p>
+  <p class="totals-text"><strong><span id="totalSinceOct"></span> KM seit Oktober 2023</strong></p>
+</div>
 
-  <div id="status"></div>
+<form id="dataForm">
+  <input type="text" id="date" placeholder="Datum (JJJJ-MM-TT)" required>
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="number" id="km" placeholder="Kilometer" required>
+  <button type="submit">Eintragen</button>
+</form>
 
-  <!-- Statistik-Bereiche -->
-  <div id="totals">
-    <p><strong>Gesamt-Kilometer seit Oktober 2023:</strong> <span id="totalSinceOct"></span></p>
-    <p><strong>Gesamt-Kilometer in den letzten 365 Tagen:</strong> <span id="totalLastYear"></span></p>
-  </div>
+<div id="status"></div>
 
-  <h2 class="section-title">Kilometer je Name in den letzten 365 Tagen:</h2>
-  <table id="summary365Table">
-    <thead>
-      <tr><th>Name</th><th>Gesamt-Kilometer</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="summary30Table"><thead><tr><th>Name</th><th>30 Tage</th></tr></thead><tbody></tbody></table>
+<table id="summary365Table"><thead><tr><th>Name</th><th>365 Tage</th></tr></thead><tbody></tbody></table>
+<table id="quarterlyTable"><thead><tr><th>Name</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr></thead><tbody></tbody></table>
 
-  <h2 class="section-title">Gesamt-Kilometer pro Name (letzte 30 Tage):</h2>
-  <table id="summaryTable">
-    <thead>
-      <tr><th>Name</th><th>Gesamt-Kilometer</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="multi-select-container" id="nameFilterContainer">
+  <div class="multi-select-options" id="nameFilterOptions"></div>
+</div>
 
-  <h2 class="section-title">Alle Einträge nach Datum (zusammengefasst):</h2>
-  <table id="detailsTable">
-    <thead>
-      <tr><th>Datum</th><th>Name</th><th>Kilometer</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="filteredTable"><thead><tr><th>Datum</th><th>Name</th><th>Kilometer</th></tr></thead><tbody></tbody></table>
 
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwKk6g-ZgH4j7CuNlY25MysSHIu-dQT47WPb2t1a2LKPnpQvaHm9L9XTTxd9va1yWWF7w/exec";
-    const dataURL = scriptURL;
-    const form = document.getElementById("dataForm");
-    const statusDiv = document.getElementById("status");
-    const nameInput = document.getElementById("name");
-    const dateInput = document.getElementById("date");
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbwKk6g-ZgH4j7CuNlY25MysSHIu-dQT47WPb2t1a2LKPnpQvaHm9L9XTTxd9va1yWWF7w/exec";
+const form = document.getElementById("dataForm");
+const statusDiv = document.getElementById("status");
+const dateInput = document.getElementById("date");
+const nameInput = document.getElementById("name");
+const today = new Date();
+const todayStr = today.toISOString().split("T")[0];
+if (!dateInput.value) dateInput.value = todayStr;
 
-    // Heutiges Datum automatisch setzen
-    const heute = new Date();
-    const yyyy = heute.getFullYear();
-    const mm = String(heute.getMonth() + 1).padStart(2, '0');
-    const dd = String(heute.getDate()).padStart(2, '0');
-    dateInput.value = `${yyyy}-${mm}-${dd}`;
+const gespeicherterName = localStorage.getItem("letzterName");
+if (gespeicherterName) nameInput.value = gespeicherterName;
 
-    // Letzten Namen aus localStorage laden
-    const gespeicherterName = localStorage.getItem("letzterName");
-    if (gespeicherterName) nameInput.value = gespeicherterName;
+// 🧩 Datum automatisch korrigieren
+function normalizeDate(input) {
+  if (!input) return todayStr;
+  input = input.trim();
+  // Formate wie 6.10.25, 06.10.2025, 10/6/25
+  const d = input.match(/(\d{1,4})[.\-/](\d{1,2})[.\-/](\d{1,4})/);
+  if (d) {
+    let [_, a, b, c] = d.map(x => x.trim());
+    if (a.length === 4) return `${a}-${b.padStart(2,"0")}-${c.padStart(2,"0")}`;
+    if (c.length === 4) return `${c}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`;
+    if (c.length === 2) return `20${c}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`;
+  }
+  // ISO-Datei ok lassen
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+  return todayStr;
+}
 
-    // Formular-Submit: POST
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      const data = {
-        date: dateInput.value,
-        name: nameInput.value,
-        km: document.getElementById("km").value
-      };
-      try {
-        const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(data) });
-        const result = await res.json();
-        if (result.result === "success") {
-          localStorage.setItem("letzterName", data.name);
-          document.getElementById("km").value = "";
-          statusDiv.textContent = "✅ Eintrag gespeichert. Tabelle wird aktualisiert...";
-          loadStats();
-          setTimeout(() => statusDiv.textContent = "", 3000);
-        } else {
-          statusDiv.textContent = "⚠️ Fehler beim Speichern!";
-          setTimeout(() => statusDiv.textContent = "", 4000);
-        }
-      } catch (err) {
-        console.error(err);
-        statusDiv.textContent = "⚠️ Netzwerkfehler beim Speichern!";
-        setTimeout(() => statusDiv.textContent = "", 4000);
-      }
+dateInput.addEventListener("blur", ()=>{
+  dateInput.value = normalizeDate(dateInput.value);
+});
+
+function parseDate(str){
+  str = normalizeDate(str);
+  const [y,m,d] = str.split("-");
+  return new Date(+y, +m-1, +d);
+}
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const dateVal = normalizeDate(dateInput.value);
+  const newEntry = { date: dateVal, name: nameInput.value.trim(), km: parseFloat(document.getElementById("km").value) };
+  if (!newEntry.name || isNaN(newEntry.km)) return alert("Bitte alle Felder korrekt ausfüllen.");
+  const knownNames = new Set(window.kmData.map(d=>d.Name));
+  if (!knownNames.has(newEntry.name) && !confirm("Name unbekannt. Trotzdem eintragen?")) return;
+  try {
+    const res = await fetch(scriptURL,{method:"POST",body:JSON.stringify(newEntry)});
+    const result = await res.json();
+    if (result.result==="success") {
+      localStorage.setItem("letzterName", newEntry.name);
+      document.getElementById("km").value="";
+      statusDiv.textContent="✅ Eintrag gespeichert. Aktualisiere...";
+      loadStats();
+      setTimeout(()=>statusDiv.textContent="",3000);
+    } else throw new Error();
+  } catch(e){ statusDiv.textContent="⚠️ Fehler beim Speichern."; setTimeout(()=>statusDiv.textContent="",4000);}
+});
+
+async function loadStats(){
+  try {
+    const res=await fetch(scriptURL);
+    const rawData=await res.json();
+    const rows=rawData.slice(1);
+    const data=rows.map(r=>({Datum:parseDate(r[0]),Name:r[1],Kilometer:parseFloat(r[2])}));
+    data.forEach(d=>d.Datum.setHours(0,0,0,0));
+    window.kmData=data;
+    const t=new Date();t.setHours(0,0,0,0);
+    const y=new Date(t);y.setDate(t.getDate()-1);
+    const d7=new Date(t);d7.setDate(t.getDate()-7);
+    const d30=new Date(t);d30.setDate(t.getDate()-30);
+    const d365=new Date(t);d365.setDate(t.getDate()-365);
+    const oct=new Date(2023,9,1);
+    const sum=f=>data.filter(d=>d.Datum>=f).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("todayKm").textContent=data.filter(d=>d.Datum.getTime()===t.getTime()).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("yesterdayKm").textContent=data.filter(d=>d.Datum.getTime()===y.getTime()).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("total7").textContent=sum(d7);
+    document.getElementById("totalLast30").textContent=sum(d30);
+    document.getElementById("totalLastYear").textContent=sum(d365);
+    document.getElementById("totalSinceOct").textContent=sum(oct);
+    const summary30={}, summary365={};
+    data.forEach(d=>{if(d.Datum>=d30)summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer;
+                     if(d.Datum>=d365)summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer;});
+    const tbody30=document.querySelector("#summary30Table tbody");tbody30.innerHTML="";
+    Object.entries(summary30).sort((a,b)=>b[1]-a[1])
+      .forEach(([n,k])=>tbody30.insertAdjacentHTML("beforeend",`<tr><td>${n}</td><td>${k}</td></tr>`));
+    const tbody365=document.querySelector("#summary365Table tbody");tbody365.innerHTML="";
+    Object.entries(summary365).sort((a,b)=>b[1]-a[1])
+      .forEach(([n,k])=>tbody365.insertAdjacentHTML("beforeend",`<tr><td>${n}</td><td>${k}</td></tr>`));
+    const qd=91,qtrs=[],qSum={};
+    for(let i=0;i<4;i++){const end=new Date(t);end.setDate(end.getDate()-i*qd);const start=new Date(end);start.setDate(end.getDate()-qd);qtrs.push({start,end});}
+    data.forEach(d=>qtrs.forEach((q,i)=>{if(d.Datum>=q.start&&d.Datum<q.end){if(!qSum[d.Name])qSum[d.Name]=Array(4).fill(0);qSum[d.Name][i]+=d.Kilometer;}}));
+    const tq=document.querySelector("#quarterlyTable tbody");tq.innerHTML="";
+    Object.entries(qSum).forEach(([n,k])=>tq.insertAdjacentHTML("beforeend",`<tr><td>${n}</td>${k.map(v=>`<td>${v}</td>`).join("")}</tr>`));
+    const optDiv=document.getElementById("nameFilterOptions");
+    optDiv.innerHTML="";
+    const actNames=new Set(Object.keys(summary30));
+    const allNames=[...new Set(data.map(d=>d.Name))].sort();
+    allNames.forEach(n=>{
+      const b=document.createElement("button");
+      b.textContent=n;
+      b.className="filter-btn";
+      if(actNames.has(n)) b.classList.add("active");
+      b.onclick=e=>{e.stopPropagation();b.classList.toggle("active");updateFiltered();};
+      optDiv.appendChild(b);
     });
-
-    async function loadStats() {
-      try {
-        const res = await fetch(dataURL);
-        const rawData = await res.json();
-        const rows = rawData.slice(1);
-        const data = rows.map(r => ({
-          Datum: new Date(new Date(r[0]).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-          Name: r[1],
-          Kilometer: parseFloat(r[2])
-        }));
-
-        const today = new Date();
-        const oct2023 = new Date("2023-10-01");
-        const last365 = new Date();
-        last365.setDate(today.getDate() - 365);
-        const last30 = new Date();
-        last30.setDate(today.getDate() - 30);
-
-        document.getElementById("totalSinceOct").textContent = data.filter(d => new Date(d.Datum) >= oct2023).reduce((s,e)=>s+e.Kilometer,0);
-        document.getElementById("totalLastYear").textContent = data.filter(d => new Date(d.Datum) >= last365 && new Date(d.Datum) <= today).reduce((s,e)=>s+e.Kilometer,0);
-
-        const summary365 = {};
-        data.forEach(d => { const dt = new Date(d.Datum); if(dt>=last365 && dt<=today){ summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer; }});
-        const summary365Array = Object.entries(summary365).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
-        const tbody365 = document.querySelector("#summary365Table tbody"); tbody365.innerHTML="";
-        summary365Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody365.appendChild(r);});
-
-        const summary30 = {};
-        data.forEach(d => { const dt = new Date(d.Datum); if(dt>=last30 && dt<=today){ summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer; }});
-        const summary30Array = Object.entries(summary30).map(([Name,Km])=>({Name,Kilometer:Km})).sort((a,b)=>b.Kilometer-a.Kilometer);
-        const tbody30 = document.querySelector("#summaryTable tbody"); tbody30.innerHTML="";
-        summary30Array.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Name}</td><td>${e.Kilometer}</td>`; tbody30.appendChild(r);});
-
-        const detailMap = {};
-        data.forEach(d=>{ const key = `${d.Datum}_${d.Name}`; if(!detailMap[key]) detailMap[key]={Datum:d.Datum, Name:d.Name, Kilometer:0}; detailMap[key].Kilometer+=d.Kilometer; });
-        const detailArray = Object.values(detailMap).sort((a,b)=>new Date(b.Datum)-new Date(a.Datum));
-        const tbodyDetails = document.querySelector("#detailsTable tbody"); tbodyDetails.innerHTML="";
-        detailArray.forEach(e=>{const r=document.createElement("tr"); r.innerHTML=`<td>${e.Datum}</td><td>${e.Name}</td><td>${e.Kilometer}</td>`; tbodyDetails.appendChild(r);});
-
-      } catch(err) {
-        console.error("Fehler beim Laden der Daten",err);
-      }
+    const cont=document.getElementById("nameFilterContainer");
+    cont.onclick=e=>{e.stopPropagation();cont.classList.toggle("active");};
+    document.body.addEventListener("click",()=>cont.classList.remove("active"));
+    function updateFiltered(){
+      const act=[...optDiv.querySelectorAll(".filter-btn.active")].map(b=>b.textContent);
+      const tb=document.querySelector("#filteredTable tbody");
+      tb.innerHTML="";
+      data.filter(d=>act.includes(d.Name)).sort((a,b)=>b.Datum-a.Datum)
+          .forEach(e=>tb.insertAdjacentHTML("beforeend",`<tr><td>${e.Datum.toLocaleDateString('de-DE')}</td><td>${e.Name}</td><td>${e.Kilometer}</td></tr>`));
     }
-
-    loadStats();
-  </script>
-
+    updateFiltered();
+  }catch(e){console.error(e);}
+}
+loadStats();
+</script>
 </body>
 </html>
