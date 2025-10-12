@@ -22,12 +22,6 @@ body {
   max-width: 100%;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: var(--accent-blue);
-}
-
 .totals-text {
   font-size: 1.5rem;
   font-weight: bold;
@@ -117,7 +111,7 @@ table td { color: var(--text); }
   transition: opacity 0.4s ease, transform 0.3s ease;
 }
 #popup.show { opacity: 1; transform: translateX(-50%) scale(1); }
-#popup p { font-size: 1.2rem; font-weight: bold; color: var(--accent-blue); margin: 0; }
+#popup p { font-size: 1.2rem; font-weight: bold; color: var(--accent-red); margin: 0; }
 
 /* Filter */
 .multi-select-container {
@@ -148,8 +142,9 @@ table td { color: var(--text); }
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: none;
 }
+.filter-btn:hover { background: #f0f0f0; }
 .filter-btn.active { background: var(--accent-blue); color: #fff; }
 @media (max-width: 600px) {
   .multi-select-options { grid-template-columns: 1fr; max-height: 240px; }
@@ -211,7 +206,7 @@ dateInput.value=todayStr; dateInput.max=todayStr;
 const gespeicherterName=localStorage.getItem("letzterName");
 if(gespeicherterName)nameInput.value=gespeicherterName;
 window.kmData=[];
-let entryCooldown=false; // verhindert Doppeleinträge
+let entryCooldown=false;
 
 function parseDate(str){const p=str.split('.');return p.length===3?new Date(p[2],p[1]-1,p[0]):new Date(str);}
 function showPopup(){popup.classList.add("show");setTimeout(()=>popup.classList.remove("show"),3000);}
@@ -234,9 +229,7 @@ form.addEventListener("submit",async e=>{
       setTimeout(()=>statusDiv.textContent="",3000);
     }else{statusDiv.textContent="⚠️ Fehler beim Speichern!"; setTimeout(()=>statusDiv.textContent="",4000);}
   }catch(err){console.error(err);statusDiv.textContent="⚠️ Netzwerkfehler!";setTimeout(()=>statusDiv.textContent="",4000);}
-  finally{
-    setTimeout(()=>{entryCooldown=false;btn.disabled=false;},4000);
-  }
+  finally{setTimeout(()=>{entryCooldown=false;btn.disabled=false;},4000);}
 });
 
 async function loadStats(){
