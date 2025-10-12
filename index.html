@@ -9,9 +9,9 @@
   --bg: #ffffff;
   --text: #111111;
   --accent-blue: #003399;
-  --accent-red: #cc3300;
   --border: #00339933;
   --table-bg: #f9f9f9;
+  --popup-orange: #cc3300;
 }
 
 body {
@@ -60,9 +60,9 @@ button {
   color: #fff;
   border: none;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: opacity 0.3s;
 }
-button:hover:not([disabled]) { background: var(--accent-red); }
+button:hover:not([disabled]) { opacity: 0.85; }
 button[disabled] { opacity: 0.6; cursor: not-allowed; }
 
 #status {
@@ -111,7 +111,7 @@ table td { color: var(--text); }
   transition: opacity 0.4s ease, transform 0.3s ease;
 }
 #popup.show { opacity: 1; transform: translateX(-50%) scale(1); }
-#popup p { font-size: 1.2rem; font-weight: bold; color: var(--accent-red); margin: 0; }
+#popup p { font-size: 1.2rem; font-weight: bold; color: var(--popup-orange); margin: 0; }
 
 /* Filter */
 .multi-select-container {
@@ -142,7 +142,7 @@ table td { color: var(--text); }
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
-  transition: none;
+  transition: background 0.2s;
 }
 .filter-btn:hover { background: #f0f0f0; }
 .filter-btn.active { background: var(--accent-blue); color: #fff; }
