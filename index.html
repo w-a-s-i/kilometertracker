@@ -2,69 +2,145 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>RGL Fahrtenbuch</title>
+<title>Kilometer Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4CAF50">
+<meta name="theme-color" content="#121212">
 <style>
-body { font-family:sans-serif; margin:1rem; max-width:100%; }
-.totals-text { font-size:1.5rem; font-weight:bold; text-align:center; margin-bottom:1rem; }
-form { display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto 1.5rem auto; }
-input, button { padding:1rem; font-size:1.3rem; width:100%; box-sizing:border-box; }
-#status { text-align:center; color:green; font-size:1.1rem; margin-bottom:1rem; }
-table { width:100%; border-collapse:collapse; margin-bottom:1.5rem; }
-table th, table td { border:1px solid #ccc; padding:14px 10px; text-align:center; line-height:1.6; }
-table th { background-color:#f0f0f0; font-size:1.4rem; font-weight:bold; }
-table td { font-size:1.4rem; }
+body {
+  font-family: sans-serif;
+  margin: 1rem;
+  max-width: 100%;
+  background: #121212;
+  color: #e0e0e0;
+}
 
-/* === Filter Styling === */
+/* Allgemein */
+.totals-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto 1.5rem auto;
+}
+
+input, button {
+  padding: 1rem;
+  font-size: 1.3rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+button {
+  background: #4caf50;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+button:hover {
+  background: #43a047;
+}
+
+#status {
+  text-align: center;
+  color: #80e27e;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* Tabellen */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+table th, table td {
+  border: 1px solid #333;
+  padding: 12px 10px;
+  text-align: center;
+  line-height: 1.6;
+}
+table th {
+  background-color: #1e1e1e;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+table td {
+  font-size: 1.3rem;
+}
+
+/* Durchschnittstabelle */
+#dailyAvgTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+#dailyAvgTable th, #dailyAvgTable td {
+  border: 1px solid #333;
+  padding: 10px;
+  text-align: center;
+  font-size: 1.3rem;
+}
+#dailyAvgTable th {
+  background: #1e1e1e;
+  font-weight: bold;
+}
+
+/* Filter */
 .multi-select-container {
-  border: 1px solid #ccc;
+  border: 1px solid #333;
   padding: 8px;
   width: 100%;
   margin-bottom: 10px;
   border-radius: 6px;
-  background: #fff;
+  background: #1e1e1e;
   position: relative;
   user-select: none;
   cursor: pointer;
 }
-
-/* Options schieben Inhalt nach unten */
 .multi-select-options {
   display: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #333;
   max-height: 320px;
   overflow-y: auto;
   padding: 8px;
-  background: #fff;
+  background: #1e1e1e;
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-
 .multi-select-container.active .multi-select-options {
   display: grid;
 }
-
 .filter-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: #f3f3f3;
+  background: #2a2a2a;
+  color: #ccc;
   padding: 10px;
   font-weight: 500;
   border: none;
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .filter-btn.active {
   background: #4caf50;
   color: #fff;
 }
-
 @media (max-width: 600px) {
   .multi-select-options {
     grid-template-columns: 1fr;
@@ -75,7 +151,6 @@ table td { font-size:1.4rem; }
 </head>
 <body>
 
-<!-- Neue Tages- und Wochenwerte -->
 <div id="dailyTotals">
   <p class="totals-text"><strong><span id="totalToday"></span> KM heute</strong></p>
   <p class="totals-text"><strong><span id="totalYesterday"></span> KM gestern</strong></p>
@@ -94,6 +169,20 @@ table td { font-size:1.4rem; }
   <input type="number" id="km" placeholder="Kilometer" required>
   <button type="submit">Eintragen</button>
 </form>
+
+<!-- Neue Durchschnittstabelle -->
+<table id="dailyAvgTable">
+  <thead>
+    <tr>
+      <th>Tages-KM</th>
+      <th>7T</th>
+      <th>14T</th>
+      <th>30T</th>
+      <th>60T</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
 <div id="status"></div>
 
@@ -122,7 +211,6 @@ if (gespeicherterName) nameInput.value = gespeicherterName;
 
 window.kmData = [];
 
-// Datum korrekt parsen (DD.MM.YYYY oder ISO)
 function parseDate(str) {
   const parts = str.split('.');
   if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
@@ -171,87 +259,126 @@ async function loadStats() {
     data.forEach(d => d.Datum.setHours(0, 0, 0, 0));
     window.kmData = data;
 
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-    const last7 = new Date(today); last7.setDate(today.getDate() - 7);
-    const last30 = new Date(today); last30.setDate(today.getDate() - 30);
-    const last365 = new Date(today); last365.setDate(today.getDate() - 365);
-    const oct2023 = new Date(2023, 9, 1);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+    const last7 = new Date(today); last7.setDate(today.getDate()-7);
+    const last30 = new Date(today); last30.setDate(today.getDate()-30);
+    const last365 = new Date(today); last365.setDate(today.getDate()-365);
+    const oct2023 = new Date(2023,9,1);
 
-    // Neue Tages-/Wochen-Werte
-    document.getElementById("totalToday").textContent = data.filter(d => d.Datum.getTime() === today.getTime()).reduce((s, e) => s + e.Kilometer, 0);
-    document.getElementById("totalYesterday").textContent = data.filter(d => d.Datum.getTime() === yesterday.getTime()).reduce((s, e) => s + e.Kilometer, 0);
-    document.getElementById("totalLast7").textContent = data.filter(d => d.Datum >= last7).reduce((s, e) => s + e.Kilometer, 0);
+    // Gesamtwerte
+    document.getElementById("totalToday").textContent = data.filter(d=>d.Datum.getTime()===today.getTime()).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalYesterday").textContent = data.filter(d=>d.Datum.getTime()===yesterday.getTime()).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalLast7").textContent = data.filter(d=>d.Datum>=last7).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalLast30").textContent = data.filter(d=>d.Datum>=last30).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalLastYear").textContent = data.filter(d=>d.Datum>=last365).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalSinceOct").textContent = data.filter(d=>d.Datum>=oct2023).reduce((s,e)=>s+e.Kilometer,0);
 
-    // Bestehende Summen
-    document.getElementById("totalLast30").textContent = data.filter(d => d.Datum >= last30).reduce((s, e) => s + e.Kilometer, 0);
-    document.getElementById("totalLastYear").textContent = data.filter(d => d.Datum >= last365).reduce((s, e) => s + e.Kilometer, 0);
-    document.getElementById("totalSinceOct").textContent = data.filter(d => d.Datum >= oct2023).reduce((s, e) => s + e.Kilometer, 0);
+    // Durchschnittstabelle
+    const now = new Date();
+    function avgForDays(name,days){
+      const start=new Date(now);
+      start.setDate(now.getDate()-days);
+      const total=data.filter(d=>d.Name===name && d.Datum>=start).reduce((s,e)=>s+e.Kilometer,0);
+      return +(total/days).toFixed(2);
+    }
+    const allNames=[...new Set(data.map(d=>d.Name))];
+    const avgData=allNames.map(name=>{
+      const avg7=avgForDays(name,7);
+      const avg14=avgForDays(name,14);
+      const avg30=avgForDays(name,30);
+      const avg60=avgForDays(name,60);
+      return {name,avg7,avg14,avg30,avg60};
+    }).filter(p=>(p.avg7+p.avg14+p.avg30+p.avg60)>0);
+    avgData.sort((a,b)=>b.avg7-a.avg7);
+    const avgTbody=document.querySelector("#dailyAvgTable tbody");
+    avgTbody.innerHTML="";
+    avgData.forEach(p=>{
+      const r=document.createElement("tr");
+      r.innerHTML=`<td>${p.name}</td><td>${p.avg7}</td><td>${p.avg14}</td><td>${p.avg30}</td><td>${p.avg60}</td>`;
+      avgTbody.appendChild(r);
+    });
 
-    // Tabellen
-    const summary30 = {};
-    data.forEach(d => { if (d.Datum >= last30) summary30[d.Name] = (summary30[d.Name] || 0) + d.Kilometer; });
-    const tbody30 = document.querySelector("#summary30Table tbody"); tbody30.innerHTML = "";
-    Object.entries(summary30).sort((a, b) => b[1] - a[1]).forEach(([n, k]) => { const r = document.createElement("tr"); r.innerHTML = `<td>${n}</td><td>${k}</td>`; tbody30.appendChild(r); });
+    // 30 Tage
+    const summary30={};
+    data.forEach(d=>{if(d.Datum>=last30)summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer;});
+    const tbody30=document.querySelector("#summary30Table tbody");tbody30.innerHTML="";
+    Object.entries(summary30).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>{
+      const r=document.createElement("tr");
+      r.innerHTML=`<td>${n}</td><td>${k}</td>`;
+      tbody30.appendChild(r);
+    });
 
-    const summary365 = {};
-    data.forEach(d => { if (d.Datum >= last365) summary365[d.Name] = (summary365[d.Name] || 0) + d.Kilometer; });
-    const tbody365 = document.querySelector("#summary365Table tbody"); tbody365.innerHTML = "";
-    Object.entries(summary365).sort((a, b) => b[1] - a[1]).forEach(([n, k]) => { const r = document.createElement("tr"); r.innerHTML = `<td>${n}</td><td>${k}</td>`; tbody365.appendChild(r); });
+    // 365 Tage
+    const summary365={};
+    data.forEach(d=>{if(d.Datum>=last365)summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer;});
+    const tbody365=document.querySelector("#summary365Table tbody");tbody365.innerHTML="";
+    Object.entries(summary365).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>{
+      const r=document.createElement("tr");
+      r.innerHTML=`<td>${n}</td><td>${k}</td>`;
+      tbody365.appendChild(r);
+    });
 
-    const quarterDays = 91, quarters = [];
-    for (let i = 0; i < 4; i++) { const end = new Date(today); end.setDate(end.getDate() - i * quarterDays); const start = new Date(end); start.setDate(end.getDate() - quarterDays); quarters.push({ start, end }); }
-    const quarterSummary = {};
-    data.forEach(d => { quarters.forEach((q, i) => { if (d.Datum >= q.start && d.Datum < q.end) { if (!quarterSummary[d.Name]) quarterSummary[d.Name] = Array(4).fill(0); quarterSummary[d.Name][i] += d.Kilometer; } }); });
-    const sortedQuarterData = Object.entries(quarterSummary).map(([n, kms]) => ({ name: n, kms })).sort((a, b) => b.kms[0] - a.kms[0]);
-    const tbodyQuarter = document.querySelector("#quarterlyTable tbody"); tbodyQuarter.innerHTML = "";
-    sortedQuarterData.forEach(e => { const r = document.createElement("tr"); r.innerHTML = `<td>${e.name}</td>` + e.kms.map(k => `<td>${k}</td>`).join(""); tbodyQuarter.appendChild(r); });
+    // Quartale
+    const quarterDays=91,quarters=[];
+    for(let i=0;i<4;i++){const end=new Date(today);end.setDate(end.getDate()-i*quarterDays);const start=new Date(end);start.setDate(end.getDate()-quarterDays);quarters.push({start,end});}
+    const quarterSummary={};
+    data.forEach(d=>{
+      quarters.forEach((q,i)=>{
+        if(d.Datum>=q.start && d.Datum<q.end){
+          if(!quarterSummary[d.Name])quarterSummary[d.Name]=Array(4).fill(0);
+          quarterSummary[d.Name][i]+=d.Kilometer;
+        }
+      });
+    });
+    const sortedQuarterData=Object.entries(quarterSummary).map(([n,kms])=>({name:n,kms})).sort((a,b)=>b.kms[0]-a.kms[0]);
+    const tbodyQuarter=document.querySelector("#quarterlyTable tbody");tbodyQuarter.innerHTML="";
+    sortedQuarterData.forEach(e=>{
+      const r=document.createElement("tr");
+      r.innerHTML=`<td>${e.name}</td>`+e.kms.map(k=>`<td>${k}</td>`).join("");
+      tbodyQuarter.appendChild(r);
+    });
 
-    // Filter mit Buttons
-    const nameSet = Array.from(new Set(data.map(d => d.Name))).sort();
-    const container = document.getElementById("nameFilterContainer");
-    const optionsDiv = document.getElementById("nameFilterOptions");
-    optionsDiv.innerHTML = "";
-
-    const active30Names = new Set(data.filter(d => d.Datum >= last30).map(d => d.Name));
-
-    nameSet.forEach(n => {
-      const btn = document.createElement("button");
-      btn.textContent = n;
-      btn.className = "filter-btn";
-      if (active30Names.has(n)) btn.classList.add("active");
-      btn.addEventListener("click", e => {
+    // Filter
+    const nameSet=Array.from(new Set(data.map(d=>d.Name))).sort();
+    const container=document.getElementById("nameFilterContainer");
+    const optionsDiv=document.getElementById("nameFilterOptions");
+    optionsDiv.innerHTML="";
+    const active30Names=new Set(data.filter(d=>d.Datum>=last30).map(d=>d.Name));
+    nameSet.forEach(n=>{
+      const btn=document.createElement("button");
+      btn.textContent=n;
+      btn.className="filter-btn";
+      if(active30Names.has(n))btn.classList.add("active");
+      btn.addEventListener("click",e=>{
         e.stopPropagation();
         btn.classList.toggle("active");
         updateFilteredTable();
       });
       optionsDiv.appendChild(btn);
     });
-
-    container.addEventListener("click", e => {
+    container.addEventListener("click",e=>{
       e.stopPropagation();
       container.classList.toggle("active");
     });
-    document.body.addEventListener("click", () => container.classList.remove("active"));
+    document.body.addEventListener("click",()=>container.classList.remove("active"));
 
-    function updateFilteredTable() {
-      const activeNames = Array.from(optionsDiv.querySelectorAll(".filter-btn.active")).map(b => b.textContent);
-      const tbody = document.querySelector("#filteredTable tbody");
-      tbody.innerHTML = "";
-      data.filter(d => activeNames.includes(d.Name))
-          .sort((a, b) => b.Datum - a.Datum)
-          .forEach(e => {
-            const r = document.createElement("tr");
-            r.innerHTML = `<td>${e.Datum.toLocaleDateString('de-DE')}</td><td>${e.Name}</td><td>${e.Kilometer}</td>`;
+    function updateFilteredTable(){
+      const activeNames=Array.from(optionsDiv.querySelectorAll(".filter-btn.active")).map(b=>b.textContent);
+      const tbody=document.querySelector("#filteredTable tbody");
+      tbody.innerHTML="";
+      data.filter(d=>activeNames.includes(d.Name))
+          .sort((a,b)=>b.Datum-a.Datum)
+          .forEach(e=>{
+            const r=document.createElement("tr");
+            r.innerHTML=`<td>${e.Datum.toLocaleDateString('de-DE')}</td><td>${e.Name}</td><td>${e.Kilometer}</td>`;
             tbody.appendChild(r);
           });
     }
-
     updateFilteredTable();
 
-  } catch (err) { console.error(err); }
+  } catch(err){console.error(err);}
 }
-
 loadStats();
 </script>
 </body>
