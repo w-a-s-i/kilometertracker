@@ -2,24 +2,38 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Kilometer Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#121212">
+<meta name="theme-color" content="#003399">
 <style>
+:root {
+  --bg: #ffffff;
+  --text: #111111;
+  --accent-blue: #003399;
+  --accent-red: #cc3300;
+  --border: #00339933;
+  --table-bg: #f9f9f9;
+}
+
 body {
+  background: var(--bg);
+  color: var(--text);
   font-family: sans-serif;
   margin: 1rem;
   max-width: 100%;
-  background: #121212;
-  color: #e0e0e0;
 }
 
-/* Allgemein */
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--accent-blue);
+}
+
 .totals-text {
   font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
   margin-bottom: 1rem;
+  color: var(--accent-blue);
 }
 
 form {
@@ -28,33 +42,38 @@ form {
   gap: 1rem;
   max-width: 400px;
   margin: 0 auto 1.5rem auto;
+  background: #f5f5ff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 
 input, button {
   padding: 1rem;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   width: 100%;
   box-sizing: border-box;
-  background: #1e1e1e;
-  color: #e0e0e0;
-  border: 1px solid #333;
   border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
 }
 
+input:focus { outline: 2px solid var(--accent-blue); }
+
 button {
-  background: #4caf50;
+  background: var(--accent-blue);
+  color: #fff;
   border: none;
-  color: white;
   cursor: pointer;
   transition: background 0.3s;
 }
-button:hover {
-  background: #43a047;
-}
+button:hover:not([disabled]) { background: var(--accent-red); }
+button[disabled] { opacity: 0.6; cursor: not-allowed; }
 
 #status {
   text-align: center;
-  color: #80e27e;
+  color: var(--accent-blue);
   font-size: 1.1rem;
   margin-bottom: 1rem;
 }
@@ -64,88 +83,76 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--table-bg);
+  border-radius: 8px;
+  overflow: hidden;
 }
 table th, table td {
-  border: 1px solid #333;
-  padding: 12px 10px;
-  text-align: center;
-  line-height: 1.6;
-}
-table th {
-  background-color: #1e1e1e;
-  font-size: 1.3rem;
-  font-weight: bold;
-}
-table td {
-  font-size: 1.3rem;
-}
-
-/* Durchschnittstabelle */
-#dailyAvgTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-}
-#dailyAvgTable th, #dailyAvgTable td {
-  border: 1px solid #333;
+  border: 1px solid var(--border);
   padding: 10px;
   text-align: center;
-  font-size: 1.3rem;
 }
-#dailyAvgTable th {
-  background: #1e1e1e;
+table th {
+  background: var(--accent-blue);
+  color: #fff;
   font-weight: bold;
 }
+table td { color: var(--text); }
+
+/* Popup */
+#popup {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  background: #ffffff;
+  border: 3px solid var(--accent-blue);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  padding: 20px 30px;
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.3s ease;
+}
+#popup.show { opacity: 1; transform: translateX(-50%) scale(1); }
+#popup p { font-size: 1.2rem; font-weight: bold; color: var(--accent-blue); margin: 0; }
 
 /* Filter */
 .multi-select-container {
-  border: 1px solid #333;
+  border: 1px solid var(--accent-blue);
   padding: 8px;
-  width: 100%;
-  margin-bottom: 10px;
   border-radius: 6px;
-  background: #1e1e1e;
-  position: relative;
+  background: #f8f8f8;
   user-select: none;
   cursor: pointer;
 }
 .multi-select-options {
   display: none;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border);
   max-height: 320px;
   overflow-y: auto;
   padding: 8px;
-  background: #1e1e1e;
+  background: #f8f8f8;
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-.multi-select-container.active .multi-select-options {
-  display: grid;
-}
+.multi-select-container.active .multi-select-options { display: grid; }
 .filter-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: #2a2a2a;
-  color: #ccc;
-  padding: 10px;
-  font-weight: 500;
-  border: none;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--accent-blue);
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
-.filter-btn.active {
-  background: #4caf50;
-  color: #fff;
-}
+.filter-btn.active { background: var(--accent-blue); color: #fff; }
 @media (max-width: 600px) {
-  .multi-select-options {
-    grid-template-columns: 1fr;
-    max-height: 240px;
-  }
+  .multi-select-options { grid-template-columns: 1fr; max-height: 240px; }
 }
 </style>
 </head>
@@ -166,20 +173,15 @@ table td {
 <form id="dataForm">
   <input type="date" id="date" required>
   <input type="text" id="name" placeholder="Name" required>
-  <input type="number" id="km" placeholder="Kilometer" required>
-  <button type="submit">Eintragen</button>
+  <input type="number" id="km" placeholder="Kilometer" step="0.1" min="0" required>
+  <button type="submit" id="submitBtn">Eintragen</button>
 </form>
 
-<!-- Neue Durchschnittstabelle -->
+<div id="popup"><p>Gut gemacht RGL Old Boy.<br>Weiter so!</p></div>
+
 <table id="dailyAvgTable">
   <thead>
-    <tr>
-      <th>Tages-KM</th>
-      <th>7T</th>
-      <th>14T</th>
-      <th>30T</th>
-      <th>60T</th>
-    </tr>
+    <tr><th>Tages-KM</th><th>7 T</th><th>14 T</th><th>30 T</th><th>60 T</th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -197,90 +199,77 @@ table td {
 <table id="filteredTable"><thead><tr><th>Datum</th><th>Name</th><th>Kilometer</th></tr></thead><tbody></tbody></table>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbwKk6g-ZgH4j7CuNlY25MysSHIu-dQT47WPb2t1a2LKPnpQvaHm9L9XTTxd9va1yWWF7w/exec";
-const form = document.getElementById("dataForm");
-const statusDiv = document.getElementById("status");
-const nameInput = document.getElementById("name");
-const dateInput = document.getElementById("date");
-const todayStr = new Date().toISOString().split('T')[0];
-dateInput.value = todayStr;
-dateInput.max = todayStr;
+const scriptURL="https://script.google.com/macros/s/AKfycbwKk6g-ZgH4j7CuNlY25MysSHIu-dQT47WPb2t1a2LKPnpQvaHm9L9XTTxd9va1yWWF7w/exec";
+const form=document.getElementById("dataForm");
+const btn=document.getElementById("submitBtn");
+const statusDiv=document.getElementById("status");
+const popup=document.getElementById("popup");
+const nameInput=document.getElementById("name");
+const dateInput=document.getElementById("date");
+const todayStr=new Date().toISOString().split("T")[0];
+dateInput.value=todayStr; dateInput.max=todayStr;
+const gespeicherterName=localStorage.getItem("letzterName");
+if(gespeicherterName)nameInput.value=gespeicherterName;
+window.kmData=[];
+let entryCooldown=false; // verhindert Doppeleinträge
 
-const gespeicherterName = localStorage.getItem("letzterName");
-if (gespeicherterName) nameInput.value = gespeicherterName;
+function parseDate(str){const p=str.split('.');return p.length===3?new Date(p[2],p[1]-1,p[0]):new Date(str);}
+function showPopup(){popup.classList.add("show");setTimeout(()=>popup.classList.remove("show"),3000);}
 
-window.kmData = [];
-
-function parseDate(str) {
-  const parts = str.split('.');
-  if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
-  return new Date(str);
-}
-
-form.addEventListener("submit", async e => {
+form.addEventListener("submit",async e=>{
   e.preventDefault();
-  const newEntry = { date: dateInput.value, name: nameInput.value.trim(), km: parseFloat(document.getElementById("km").value) };
-  const knownNames = new Set(window.kmData.map(d => d.Name));
-  if (!knownNames.has(newEntry.name) && !confirm("Name unbekannt. Trotzdem eintragen?")) return;
-  const duplicate = window.kmData.some(d => d.Datum.toISOString().split('T')[0] === newEntry.date && d.Name === newEntry.name && d.Kilometer === newEntry.km);
-  if (duplicate && !confirm("Eintrag existiert bereits. Trotzdem eintragen?")) return;
-
-  try {
-    const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(newEntry) });
-    const result = await res.json();
-    if (result.result === "success") {
-      localStorage.setItem("letzterName", newEntry.name);
-      document.getElementById("km").value = "";
-      statusDiv.textContent = "✅ Eintrag gespeichert. Tabelle wird aktualisiert...";
+  if(entryCooldown){statusDiv.textContent="⏳ Bitte kurz warten – Eintrag läuft.";return;}
+  const newEntry={date:dateInput.value,name:nameInput.value.trim(),km:parseFloat(document.getElementById("km").value)};
+  entryCooldown=true;
+  btn.disabled=true;
+  try{
+    const res=await fetch(scriptURL,{method:"POST",body:JSON.stringify(newEntry)});
+    const result=await res.json();
+    if(result.result==="success"){
+      localStorage.setItem("letzterName",newEntry.name);
+      document.getElementById("km").value="";
+      showPopup();
+      statusDiv.textContent="✅ Eintrag gespeichert – aktualisiere …";
       loadStats();
-      setTimeout(() => statusDiv.textContent = "", 3000);
-    } else {
-      statusDiv.textContent = "⚠️ Fehler beim Speichern!";
-      setTimeout(() => statusDiv.textContent = "", 4000);
-    }
-  } catch (err) {
-    console.error(err);
-    statusDiv.textContent = "⚠️ Netzwerkfehler!";
-    setTimeout(() => statusDiv.textContent = "", 4000);
+      setTimeout(()=>statusDiv.textContent="",3000);
+    }else{statusDiv.textContent="⚠️ Fehler beim Speichern!"; setTimeout(()=>statusDiv.textContent="",4000);}
+  }catch(err){console.error(err);statusDiv.textContent="⚠️ Netzwerkfehler!";setTimeout(()=>statusDiv.textContent="",4000);}
+  finally{
+    setTimeout(()=>{entryCooldown=false;btn.disabled=false;},4000);
   }
 });
 
-async function loadStats() {
-  try {
-    const res = await fetch(scriptURL);
-    const rawData = await res.json();
-    const rows = rawData.slice(1);
+async function loadStats(){
+  try{
+    const res=await fetch(scriptURL);
+    const rawData=await res.json();
+    const rows=rawData.slice(1);
+    const data=rows.map(r=>({Datum:parseDate(r[0]),Name:r[1],Kilometer:parseFloat(r[2])}));
+    data.forEach(d=>d.Datum.setHours(0,0,0,0));
+    window.kmData=data;
 
-    const data = rows.map(r => ({
-      Datum: parseDate(r[0]),
-      Name: r[1],
-      Kilometer: parseFloat(r[2])
-    }));
-    data.forEach(d => d.Datum.setHours(0, 0, 0, 0));
-    window.kmData = data;
+    const today=new Date();today.setHours(0,0,0,0);
+    const yesterday=new Date(today);yesterday.setDate(today.getDate()-1);
+    const last7=new Date(today);last7.setDate(today.getDate()-7);
+    const last30=new Date(today);last30.setDate(today.getDate()-30);
+    const last365=new Date(today);last365.setDate(today.getDate()-365);
+    const oct2023=new Date(2023,9,1);
 
-    const today = new Date(); today.setHours(0,0,0,0);
-    const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
-    const last7 = new Date(today); last7.setDate(today.getDate()-7);
-    const last30 = new Date(today); last30.setDate(today.getDate()-30);
-    const last365 = new Date(today); last365.setDate(today.getDate()-365);
-    const oct2023 = new Date(2023,9,1);
+    const f=n=>Math.round(n);
+    const f1=n=>n.toFixed(1);
 
-    // Gesamtwerte
-    document.getElementById("totalToday").textContent = data.filter(d=>d.Datum.getTime()===today.getTime()).reduce((s,e)=>s+e.Kilometer,0);
-    document.getElementById("totalYesterday").textContent = data.filter(d=>d.Datum.getTime()===yesterday.getTime()).reduce((s,e)=>s+e.Kilometer,0);
-    document.getElementById("totalLast7").textContent = data.filter(d=>d.Datum>=last7).reduce((s,e)=>s+e.Kilometer,0);
-    document.getElementById("totalLast30").textContent = data.filter(d=>d.Datum>=last30).reduce((s,e)=>s+e.Kilometer,0);
-    document.getElementById("totalLastYear").textContent = data.filter(d=>d.Datum>=last365).reduce((s,e)=>s+e.Kilometer,0);
-    document.getElementById("totalSinceOct").textContent = data.filter(d=>d.Datum>=oct2023).reduce((s,e)=>s+e.Kilometer,0);
+    document.getElementById("totalToday").textContent=f(data.filter(d=>d.Datum.getTime()===today.getTime()).reduce((s,e)=>s+e.Kilometer,0));
+    document.getElementById("totalYesterday").textContent=f(data.filter(d=>d.Datum.getTime()===yesterday.getTime()).reduce((s,e)=>s+e.Kilometer,0));
+    document.getElementById("totalLast7").textContent=f(data.filter(d=>d.Datum>=last7).reduce((s,e)=>s+e.Kilometer,0));
+    document.getElementById("totalLast30").textContent=f(data.filter(d=>d.Datum>=last30).reduce((s,e)=>s+e.Kilometer,0));
+    document.getElementById("totalLastYear").textContent=f(data.filter(d=>d.Datum>=last365).reduce((s,e)=>s+e.Kilometer,0));
+    document.getElementById("totalSinceOct").textContent=f(data.filter(d=>d.Datum>=oct2023).reduce((s,e)=>s+e.Kilometer,0));
 
-    // Durchschnittstabelle
-    const now = new Date();
+    const now=new Date();
     function avgForDays(name,days){
-      const start=new Date(now);
-      start.setDate(now.getDate()-days);
-      const total=data.filter(d=>d.Name===name && d.Datum>=start).reduce((s,e)=>s+e.Kilometer,0);
-      return +(total/days).toFixed(2);
+      const start=new Date(now);start.setDate(now.getDate()-days);
+      const total=data.filter(d=>d.Name===name&&d.Datum>=start).reduce((s,e)=>s+e.Kilometer,0);
+      return parseFloat((total/days).toFixed(1));
     }
     const allNames=[...new Set(data.map(d=>d.Name))];
     const avgData=allNames.map(name=>{
@@ -295,51 +284,33 @@ async function loadStats() {
     avgTbody.innerHTML="";
     avgData.forEach(p=>{
       const r=document.createElement("tr");
-      r.innerHTML=`<td>${p.name}</td><td>${p.avg7}</td><td>${p.avg14}</td><td>${p.avg30}</td><td>${p.avg60}</td>`;
+      r.innerHTML=`<td>${p.name}</td><td>${p.avg7.toFixed(1)}</td><td>${p.avg14.toFixed(1)}</td><td>${p.avg30.toFixed(1)}</td><td>${p.avg60.toFixed(1)}</td>`;
       avgTbody.appendChild(r);
     });
 
-    // 30 Tage
-    const summary30={};
-    data.forEach(d=>{if(d.Datum>=last30)summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer;});
-    const tbody30=document.querySelector("#summary30Table tbody");tbody30.innerHTML="";
-    Object.entries(summary30).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>{
-      const r=document.createElement("tr");
-      r.innerHTML=`<td>${n}</td><td>${k}</td>`;
-      tbody30.appendChild(r);
+    const summary30={},summary365={};
+    data.forEach(d=>{
+      if(d.Datum>=last30)summary30[d.Name]=(summary30[d.Name]||0)+d.Kilometer;
+      if(d.Datum>=last365)summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer;
     });
+    const tbody30=document.querySelector("#summary30Table tbody");
+    const tbody365=document.querySelector("#summary365Table tbody");
+    tbody30.innerHTML="";tbody365.innerHTML="";
+    Object.entries(summary30).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>tbody30.innerHTML+=`<tr><td>${n}</td><td>${f(k)}</td></tr>`);
+    Object.entries(summary365).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>tbody365.innerHTML+=`<tr><td>${n}</td><td>${f(k)}</td></tr>`);
 
-    // 365 Tage
-    const summary365={};
-    data.forEach(d=>{if(d.Datum>=last365)summary365[d.Name]=(summary365[d.Name]||0)+d.Kilometer;});
-    const tbody365=document.querySelector("#summary365Table tbody");tbody365.innerHTML="";
-    Object.entries(summary365).sort((a,b)=>b[1]-a[1]).forEach(([n,k])=>{
-      const r=document.createElement("tr");
-      r.innerHTML=`<td>${n}</td><td>${k}</td>`;
-      tbody365.appendChild(r);
-    });
-
-    // Quartale
     const quarterDays=91,quarters=[];
     for(let i=0;i<4;i++){const end=new Date(today);end.setDate(end.getDate()-i*quarterDays);const start=new Date(end);start.setDate(end.getDate()-quarterDays);quarters.push({start,end});}
     const quarterSummary={};
-    data.forEach(d=>{
-      quarters.forEach((q,i)=>{
-        if(d.Datum>=q.start && d.Datum<q.end){
-          if(!quarterSummary[d.Name])quarterSummary[d.Name]=Array(4).fill(0);
-          quarterSummary[d.Name][i]+=d.Kilometer;
-        }
-      });
-    });
+    data.forEach(d=>{quarters.forEach((q,i)=>{if(d.Datum>=q.start&&d.Datum<q.end){if(!quarterSummary[d.Name])quarterSummary[d.Name]=Array(4).fill(0);quarterSummary[d.Name][i]+=d.Kilometer;}});});
     const sortedQuarterData=Object.entries(quarterSummary).map(([n,kms])=>({name:n,kms})).sort((a,b)=>b.kms[0]-a.kms[0]);
     const tbodyQuarter=document.querySelector("#quarterlyTable tbody");tbodyQuarter.innerHTML="";
     sortedQuarterData.forEach(e=>{
       const r=document.createElement("tr");
-      r.innerHTML=`<td>${e.name}</td>`+e.kms.map(k=>`<td>${k}</td>`).join("");
+      r.innerHTML=`<td>${e.name}</td>`+e.kms.map(k=>`<td>${f(k)}</td>`).join("");
       tbodyQuarter.appendChild(r);
     });
 
-    // Filter
     const nameSet=Array.from(new Set(data.map(d=>d.Name))).sort();
     const container=document.getElementById("nameFilterContainer");
     const optionsDiv=document.getElementById("nameFilterOptions");
@@ -347,19 +318,15 @@ async function loadStats() {
     const active30Names=new Set(data.filter(d=>d.Datum>=last30).map(d=>d.Name));
     nameSet.forEach(n=>{
       const btn=document.createElement("button");
-      btn.textContent=n;
-      btn.className="filter-btn";
+      btn.textContent=n;btn.className="filter-btn";
       if(active30Names.has(n))btn.classList.add("active");
       btn.addEventListener("click",e=>{
-        e.stopPropagation();
-        btn.classList.toggle("active");
-        updateFilteredTable();
+        e.stopPropagation();btn.classList.toggle("active");updateFilteredTable();
       });
       optionsDiv.appendChild(btn);
     });
     container.addEventListener("click",e=>{
-      e.stopPropagation();
-      container.classList.toggle("active");
+      e.stopPropagation();container.classList.toggle("active");
     });
     document.body.addEventListener("click",()=>container.classList.remove("active"));
 
@@ -371,13 +338,12 @@ async function loadStats() {
           .sort((a,b)=>b.Datum-a.Datum)
           .forEach(e=>{
             const r=document.createElement("tr");
-            r.innerHTML=`<td>${e.Datum.toLocaleDateString('de-DE')}</td><td>${e.Name}</td><td>${e.Kilometer}</td>`;
+            r.innerHTML=`<td>${e.Datum.toLocaleDateString('de-DE')}</td><td>${e.Name}</td><td>${f(e.Kilometer)}</td>`;
             tbody.appendChild(r);
           });
     }
     updateFilteredTable();
-
-  } catch(err){console.error(err);}
+  }catch(err){console.error(err);}
 }
 loadStats();
 </script>
